@@ -1,0 +1,62 @@
+Attenzione: il crosslogin NON funziona per i siteaccess cha hanno il debug output attivato!
+
+1) copiare estensione in extension
+2) aggiungere /extension/occrosslogin/sql/[postgresql|mysql]/schema.sql al db
+3) configurare /extension/occrosslogin/settings/crosslogin.ini
+
+esempio:
+siteaccess di login = https://sitodev.comune.trento.it
+siteaccess di default = http://retecivicadev.comune.trento.it
+
+4) *** correggere virtual host ***
+
+        # in vhost NON ssl
+        
+        RewriteCond %{HTTPS} off
+        RewriteCond %{REQUEST_URI} ^(.*user/login.*)$
+        RewriteCond %{HTTP_HOST} !^(sitodev.*)$
+        RewriteRule ^/(.*) https://sitodev.comune.trento.it%{REQUEST_URI}/\?redirect\=%{HTTP_HOST} [L]
+        
+        RewriteCond %{HTTPS} off
+        RewriteCond %{REQUEST_URI} ^(.*user/logout.*)$
+        RewriteRule ^/(.*) https://sitodev.comune.trento.it%{REQUEST_URI}/\?redirect\=%{HTTP_HOST} [L]
+        
+        RewriteCond %{REQUEST_URI} !^(.*user.*)$
+        RewriteCond %{HTTP_HOST} ^(sitodev.*)$
+        RewriteRule ^/(.*) http://retecivicadev.comune.trento.it%{REQUEST_URI} [L]
+
+        # in vhost ssl
+        
+        RewriteCond %{HTTPS} on
+        RewriteCond %{REQUEST_URI} ^(.*user/login.*)$
+        RewriteCond %{HTTP_HOST} !^(sitodev.*)$
+        RewriteRule ^/(.*) https://sitodev.comune.trento.it%{REQUEST_URI}/\?redirect\=%{HTTP_HOST} [L]
+
+        RewriteCond %{REQUEST_URI} !^(.*user.*)$
+        RewriteCond %{HTTP_HOST} ^(sitodev.*)$
+        RewriteRule ^/(.*) http://retecivicadev.comune.trento.it%{REQUEST_URI} [L]
+
+        RewriteCond %{HTTPS} off
+        RewriteCond %{REQUEST_URI} ^(.*user/register.*)$
+        RewriteRule ^/(.*) https://%{HTTP_HOST}%{REQUEST_URI} [L]
+        RewriteCond %{HTTPS} off
+        RewriteCond %{REQUEST_URI} ^(.*user/logout.*)$
+        RewriteRule ^/(.*) https://%{HTTP_HOST}%{REQUEST_URI} [L]
+
+5) attivare estensione (ULTIMA DELLA LISTA IN OVERRIDE/SITE.INI.APPEND.PHP)
+6) svuotare cache e rigenerare autoloads
+
+
+## NON ACCESSIBILI DA FUORI ###
+1) Admin           admin.cms.intra   -> con login in sito
+2) Area intranet   cms.intra.        -> senza login
+
+## ACCESSIBILI DA FUORI ##
+3) Area intranet   areaintranet.     -> con login in sito
+4) Sito            www.              -> default + con login in sito
+5) Auth            sito.             -> login CERTIFICATO
+
+
+12 ottobre 2011
+- portare in produzione solo per admin (1) e areaintranet (2)
+
