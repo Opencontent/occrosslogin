@@ -17,12 +17,7 @@
 {/if}
 
 
-{def $LoginHostName = ezini( 'CrossLogin', 'LoginHostName', 'crosslogin.ini' )
-     $EnabledLoginHosts = ezini( 'CrossLogin', 'EnabledLoginHosts', 'crosslogin.ini' )
-     $siteUrl = ezini( 'SiteSettings', 'SiteURL', 'site.ini' )
-     $ignore = ezini_hasvariable( 'CrossLogin', 'DisableLoginRedirect', 'crosslogin.ini' )}
-{*$siteUrl} - {$LoginHostName*}
-{if or( $siteUrl|eq( $LoginHostName|trim() ), $ignore ) }
+{if can_login()}
 
 {if $User:warning.bad_login}
 <div class="warning">

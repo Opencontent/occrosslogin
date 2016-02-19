@@ -19,18 +19,19 @@ class OcCrossLogin
     {
         $this->ini = eZINI::instance('crosslogin.ini');
         $this->isEnabled = false;
-        if ( $this->ini->hasVariable('CrossLogin','EnableRedirection') ) {
-            $this->isEnabled = $this->ini->variable('CrossLogin','EnableRedirection') == 'enabled';
+        if ($this->ini->hasVariable('CrossLogin', 'EnableRedirection')) {
+            $this->isEnabled = $this->ini->variable('CrossLogin', 'EnableRedirection') == 'enabled';
         }
-        $this->loginSiteAccess = $this->ini->variable('CrossLogin','LoginSiteAccess');
-        $this->redirectModules = (array)$this->ini->variable('CrossLogin','RedirectModules');
+        $this->loginSiteAccess = $this->ini->variable('CrossLogin', 'LoginSiteAccess');
+        $this->redirectModules = (array)$this->ini->variable('CrossLogin', 'RedirectModules');
     }
 
-    public function instance()
+    public static function instance()
     {
         if (self::$instance === null) {
             self::$instance = new self();
         }
+
         return self::$instance;
     }
 
@@ -44,28 +45,41 @@ class OcCrossLogin
 
     public function redirectToLoginAccess()
     {
-        $saIni = eZSiteAccess::getIni( $this->loginSiteAccess );
+        $saIni = eZSiteAccess::getIni($this->loginSiteAccess);
         $args = array(
-            'host' => $saIni->variable( 'SiteSettings', 'SiteURL' )
+            'host' => $saIni->variable('SiteSettings', 'SiteURL')
         );
         eZHTTPTool::redirect('user/login', $args);
         eZExecution::cleanExit();
     }
 
-    public function needRedirectionToLoginAccess(eZURI $uri)
+    public function isLoginSiteAccess()
     {
         $siteaccess = eZSiteAccess::current();
-        if ( $siteaccess && $this->isEnabled )
-        {
+        if ($siteaccess) {
             $saName = $siteaccess['name'];
 
-            $checkUri = clone $uri;
-            $moduleName = $checkUri->element();
-            $module = eZModule::exists( $moduleName );
-            if ( $module instanceof eZModule ){
-                if ( in_array( $module->Name, $this->redirectModules ) && $saName !== $this->loginSiteAccess ){
-                    return true;
-                }
+            return $saName == $this->loginSiteAccess;
+        }
+
+        return false;
+    }
+
+    public function isEnabled(){
+        return $this->isEnabled;
+    }
+
+    public function needRedirectionToLoginAccess(eZURI $uri)
+    {
+        $checkUri = clone $uri;
+        $moduleName = $checkUri->element();
+        $module = eZModule::exists($moduleName);
+        if ($module instanceof eZModule) {
+            if ($this->isEnabled()
+                && in_array($module->Name, $this->redirectModules)
+                && !$this->isLoginSiteAccess()
+            ) {
+                return true;
             }
         }
         return false;

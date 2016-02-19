@@ -11,10 +11,7 @@
     <h1 class="long">{"Login"|i18n("design/ezwebin/user/login")}</h1>
 </div>
 
-{def $LoginHostName = ezini( 'CrossLogin', 'LoginHostName', 'crosslogin.ini' )
-     $ignore = ezini_hasvariable( 'CrossLogin', 'DisableLoginRedirect', 'crosslogin.ini' )}
-
-{if or( ezsys( 'hostname' )|eq($LoginHostName|trim()), $ignore )}
+{if can_login()}
 
 {if $User:warning.bad_login}
 <div class="warning">

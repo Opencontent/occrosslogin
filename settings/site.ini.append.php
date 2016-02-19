@@ -12,5 +12,8 @@ ExtensionDirectory[]=occrosslogin
 [Event]
 Listeners[]=request/input@OcCrossLogin::inputListener
 
+[TemplateSettings]
+ExtensionAutoloadPath[]=occrosslogin
+
 */
 ?>
