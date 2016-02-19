@@ -1,5 +1,6 @@
 <?php
 //
+// Created on: <30-Apr-2002 12:36:36 bf>
 //
 // ## BEGIN COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 // SOFTWARE NAME: eZ Publish
@@ -25,26 +26,27 @@
 // ## END COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 //
 
-$Module = $Params['Module'];
-$Module->setTitle( "Successful registration" );
-// Template handling
+$Module = array( 'name' => 'User management',
+                 'variable_params' => true );
 
-$tpl = eZTemplate::factory();
-$tpl->setVariable( "module", $Module );
-$ini = eZINI::instance();
-$verifyUserEmail = $ini->variable( 'UserSettings', 'VerifyUserEmail' );
-if ( $verifyUserEmail == "enabled" )
-    $tpl->setVariable( "verify_user_email", true );
-else
-    $tpl->setVariable( "verify_user_email", false );
+$ViewList = array();
 
-$Result = array();
-$Result['content'] = $tpl->fetch( "design:user/success.tpl" );
-$Result['path'] = array( array( 'text' => ezpI18n::tr( 'kernel/user', 'User' ),
-                                'url' => false ),
-                         array( 'text' => ezpI18n::tr( 'kernel/user', 'Success' ),
-                                'url' => false ) );
-if ( $ini->variable( 'SiteSettings', 'LoginPage' ) == 'custom' )
-    $Result['pagelayout'] = 'loginpagelayout.tpl';
+$ViewList['createezpassword'] = array(
+    'functions' => array( 'createezpassword' ),
+    'script' => 'createezpassword.php',
+    'ui_context' => 'administration',
+    'default_navigation_part' => 'ezmynavigationpart',
+    'params' => array( 'UserID' ) );
+
+$ViewList['resetezpassword'] = array(
+    'functions' => array( 'resetezpassword' ),
+    'script' => 'resetezpassword.php',
+    'ui_context' => 'administration',
+    'default_navigation_part' => 'ezmynavigationpart',
+    'params' => array( 'UserID' ) );
+
+$FunctionList = array();
+$FunctionList['createezpassword'] = array();
+$FunctionList['resetezpassword'] = array();
 
 ?>

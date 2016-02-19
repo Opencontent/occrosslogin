@@ -9,5 +9,8 @@ PolicyOmitList[]=crosslogin
 [UserSettings]
 ExtensionDirectory[]=occrosslogin
 
+[Event]
+Listeners[]=request/input@OcCrossLogin::inputListener
+
 */
 ?>
