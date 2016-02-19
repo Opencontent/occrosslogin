@@ -23,6 +23,7 @@ class OcCrossLogin
             $this->isEnabled = $this->ini->variable('CrossLogin', 'EnableRedirection') == 'enabled';
         }
         $this->loginSiteAccess = $this->ini->variable('CrossLogin', 'LoginSiteAccess');
+        $this->defaultSiteAccess = $this->ini->variable('CrossLogin', 'DefaultSiteAccess');
         $this->redirectModules = (array)$this->ini->variable('CrossLogin', 'RedirectModules');
     }
 
@@ -41,6 +42,10 @@ class OcCrossLogin
         if ($helper->needRedirectionToLoginAccess($uri)) {
             $helper->redirectToLoginAccess();
         }
+
+        if ($helper->needRedirectionToDefaultAccess($uri)) {
+            $helper->redirectToDefaultAccess();
+        }
     }
 
     public function redirectToLoginAccess()
@@ -50,6 +55,16 @@ class OcCrossLogin
             'host' => $saIni->variable('SiteSettings', 'SiteURL')
         );
         eZHTTPTool::redirect('user/login', $args);
+        eZExecution::cleanExit();
+    }
+
+    public function redirectToDefaultAccess()
+    {
+        $saIni = eZSiteAccess::getIni($this->defaultSiteAccess);
+        $args = array(
+            'host' => $saIni->variable('SiteSettings', 'SiteURL')
+        );
+        eZHTTPTool::redirect('/', $args);
         eZExecution::cleanExit();
     }
 
@@ -67,6 +82,22 @@ class OcCrossLogin
 
     public function isEnabled(){
         return $this->isEnabled;
+    }
+
+    public function needRedirectionToDefaultAccess(eZURI $uri)
+    {
+        $checkUri = clone $uri;
+        $moduleName = $checkUri->element();
+        $module = eZModule::exists($moduleName);
+        if ($module instanceof eZModule) {
+            if ($this->isEnabled()
+                && !in_array($module->Name, $this->redirectModules)
+                && $this->isLoginSiteAccess()
+            ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function needRedirectionToLoginAccess(eZURI $uri)

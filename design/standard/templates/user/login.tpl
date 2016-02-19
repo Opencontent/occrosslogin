@@ -12,11 +12,7 @@
 </div>
 
 
-{def $LoginHostName = ezini( 'CrossLogin', 'LoginHostName', 'crosslogin.ini' )
-     $EnabledLoginHosts = ezini( 'CrossLogin', 'EnabledLoginHosts', 'crosslogin.ini' )
-     $siteUrl = ezini( 'SiteSettings', 'SiteURL', 'site.ini' )}
-
-{if $siteUrl|eq( $LoginHostName|trim() )}
+{if can_login()}
 
 {if $User:warning.bad_login}
 <div class="warning">
