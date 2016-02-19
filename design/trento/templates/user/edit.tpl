@@ -32,7 +32,7 @@
 <label>{"Impostazioni personali"|i18n("design/ezwebin/user/edit")}</label>
 <ul>
 {if fetch( 'user', 'has_access_to', hash( 'module', 'user', 'function', 'createezpassword', 'user_id', $userAccount.contentobject.id  ) )}
-<li><a href={concat("user/createezpassword/", $userAccount.contentobject.id)|ezurl}>Crea una password per accedere da casa</a></li>
+<li><a href={concat("ezpassword/createezpassword/", $userAccount.contentobject.id)|ezurl}>Crea una password per accedere da casa</a></li>
 {/if}
 {*<li><a href={"content/draft"|ezurl}>{"My drafts"|i18n("design/ezwebin/user/edit")}</a>/li>*}
 <li><a href={"notification/settings"|ezurl}>{"My notification settings"|i18n("design/ezwebin/user/edit")}</a></li>

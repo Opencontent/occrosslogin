@@ -12,6 +12,7 @@ class eZCrossloginSSOHandler
     */
     function handleSSOLogin()
     {
+        $helper = OcCrossLogin::instance();
         $http = eZHTTPTool::instance();
         $token = false;
         
@@ -50,7 +51,7 @@ class eZCrossloginSSOHandler
                 eZDebug::writeWarning( 'User with token ' . $token . ' not found', __METHOD__ );
                 return false;
             }
-            if ( $http->hasSessionVariable( 'CrossRedirect' ) )
+            if ( $http->hasSessionVariable( 'CrossRedirect' ) && !$helper->isLoginSiteAccess())
                 $http->removeSessionVariable( 'CrossRedirect' );
             return $currentUser;
         }

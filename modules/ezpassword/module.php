@@ -38,15 +38,15 @@ $ViewList['createezpassword'] = array(
     'default_navigation_part' => 'ezmynavigationpart',
     'params' => array( 'UserID' ) );
 
-$ViewList['resetezpassword'] = array(
-    'functions' => array( 'resetezpassword' ),
-    'script' => 'resetezpassword.php',
-    'ui_context' => 'administration',
-    'default_navigation_part' => 'ezmynavigationpart',
-    'params' => array( 'UserID' ) );
+//$ViewList['resetezpassword'] = array(
+//    'functions' => array( 'resetezpassword' ),
+//    'script' => 'resetezpassword.php',
+//    'ui_context' => 'administration',
+//    'default_navigation_part' => 'ezmynavigationpart',
+//    'params' => array( 'UserID' ) );
 
 $FunctionList = array();
 $FunctionList['createezpassword'] = array();
-$FunctionList['resetezpassword'] = array();
+//$FunctionList['resetezpassword'] = array();
 
 ?>

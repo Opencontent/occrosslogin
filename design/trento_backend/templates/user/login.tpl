@@ -7,10 +7,6 @@
 
 <form method="post" action={"/user/login/"|ezurl} name="loginform">
 
-<div class="attribute-header">
-    <h1 class="long">{"Login"|i18n("design/ezwebin/user/login")}</h1>
-</div>
-
 {if can_login()}
 
 {if $User:warning.bad_login}
@@ -98,8 +94,8 @@ function AdminSiteaccessCheckbox( val )
 
 {else}
 
-<div class="buttonblock">
-<a class="defaultbutton" href="/user/login?url={$User:redirect_uri|wash}">Vai alla pagina di login</a>
+<div class="buttonblock login-input-wrapper" style="margin-top: 70px;">
+<a class="defaultbutton" href="/user/login?url={$User:redirect_uri|wash}" id="loginbutton" style="padding: 5px; text-decoration: none;font-size: 1.5em;">Vai alla pagina di login</a>
 </div>
 
 {/if}

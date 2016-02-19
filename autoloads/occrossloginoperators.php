@@ -30,7 +30,7 @@ class OcCrossLoginOperators
         switch ($operatorName) {
 
             case 'can_login': {
-                $operatorValue = OcCrossLogin::instance()->isEnabled() && !OcCrossLogin::instance()->isLoginSiteAccess();
+                $operatorValue = OcCrossLogin::instance()->isEnabled() && OcCrossLogin::instance()->isLoginSiteAccess();                
             } break;
         }
     }
