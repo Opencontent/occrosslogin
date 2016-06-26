@@ -31,13 +31,15 @@ class eZCrossloginSSOHandler
         
         if ( $token )
         {
-            $OCTokenObject = OCTokenObject::fetchByToken( $token );
+            $OCTokenObject = OCTokenObject::fetchByToken( $token );            
             
             if ( !$OCTokenObject )
             {
                 eZDebug::writeWarning( 'Token not found', __METHOD__ );
                 return false;
             }
+            
+            eZDebug::writeNotice( 'Valid token ' . $token, __METHOD__ );
             
             $currentUser = eZUser::fetch( $OCTokenObject->attribute( 'user_id' ) );
             

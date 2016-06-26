@@ -98,10 +98,10 @@ class eZComuneDiTrentoPaExUser extends eZUser
         //@luca
         //eZURI::transformURI( $url );
         if ( $http->hasSessionVariable( 'CrossRedirect' ) )
-        {
+        {            
             $session = session_id();
-            $token = OCToken::generateToken( $userID, $session );
-            $redirectionURI = $http->sessionVariable( 'CrossRedirect' );
+            $token = OCToken::generateToken( $userID, $session );            
+            $redirectionURI = $http->sessionVariable( 'CrossRedirect' );            
             if ( substr( $redirectionURI, -1, 1 ) == '/' )
             {
                 $redirectionURI = $redirectionURI . '?t=' . $token;    
@@ -112,6 +112,7 @@ class eZComuneDiTrentoPaExUser extends eZUser
             }
             $http->setSessionVariable( 'RedirectAfterPasswordChange', $redirectionURI );
         }
+        eZDebug::writeNotice('redirectToChangePasswordForm',__METHOD__);
         $http->setSessionVariable( 'CrossRedirect', $url );
         //@luca $http->redirect( $url );
     }

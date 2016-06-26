@@ -68,47 +68,18 @@ class OcCrossLogin
     static public function inputListener(eZURI $uri)
     {        
         $helper = self::instance();
-        $helper->setCurrentUri( $uri );        
+        $helper->setCurrentUri( $uri );
         if ($helper->needRedirectionToLoginAccess()) {
+            eZDebug::writeNotice('needRedirectionToLoginAccess',__METHOD__);
             $helper->redirectToLoginAccess();
         }
 
         if ($helper->needRedirectionToNotLoginAccess()) {
+            eZDebug::writeNotice('needRedirectionToNotLoginAccess',__METHOD__);
             $helper->redirectToNotLoginAccess();
         }        
     }
 
-    public function redirectToLoginAccess()
-    {
-        $saIni = eZSiteAccess::getIni($this->loginSiteAccess);
-        $args = array(
-            'host' => $saIni->variable('SiteSettings', 'SiteURL')
-        );
-        $params = array(
-            'redirect' => $this->currentSiteAccess,
-            'url' => $this->http->getVariable( 'url', '/' )
-        );
-        $query = http_build_query( $params );        
-        $this->redirect($this->getCurrentUri()->originalURIString(true).'?'.$query, $args);
-        eZExecution::cleanExit();
-    }
-
-    public function redirectToNotLoginAccess()
-    {
-        if ( $this->http->hasSessionVariable('CrossRedirect') ){
-            $params = $this->http->sessionVariable('CrossRedirect');
-            $this->http->removeSessionVariable( 'CrossRedirect' );
-            $this->redirect($params['page'], array('host' => $params['host']) );
-        }else{
-            $saIni = eZSiteAccess::getIni($this->defaultSiteAccess);
-            $args = array(
-                'host' => $saIni->variable('SiteSettings', 'SiteURL')
-            );
-            $this->redirect($this->getCurrentUri()->originalURIString(true), $args);
-        }
-        eZExecution::cleanExit();
-    }
-    
     protected function redirect( $path, $parameters = array(), $status = false, $encodeURL = true, $returnRedirectObject = false )
     {
         $url = eZHTTPTool::createRedirectUrl( $path, $parameters );
@@ -122,7 +93,21 @@ class OcCrossLogin
         {
             $url = eZURI::encodeURL( $url );
         }
-
+        
+        if ( eZINI::instance()->variable( 'DebugSettings', 'DebugRedirection' ) !== 'disabled' ){
+            $tpl = eZTemplate::factory();
+            $tpl->setVariable( 'site', array() );
+            $tpl->setVariable( 'warning_list', false );
+            $tpl->setVariable( 'redirect_uri', $url );
+            $templateResult = $tpl->fetch( 'design:redirect.tpl' );            
+            
+            eZDebug::addTimingPoint( "Script end" );
+            
+            eZDisplayResult( $templateResult );
+            eZExecution::cleanExit();        
+    
+        }
+        
         eZHTTPTool::headerVariable( 'Location', $url );
         /* Fix for redirecting using workflows and apache 2 */
         $escapedUrl = htmlspecialchars( $url );
@@ -152,59 +137,148 @@ EOT;
 
     public function needRedirectionToNotLoginAccess()
     {
+        $this->setToken();        
+        $result = $this->isLoginAccessModule();
+        
+        return $this->isEnabled()
+                && $result == false
+                && $this->isLoginSiteAccess();        
+    }
+    
+    public function redirectToNotLoginAccess()
+    {
+        if ( $this->http->hasSessionVariable('CrossRedirect') ){
+            $params = $this->http->sessionVariable('CrossRedirect');
+            $this->http->removeSessionVariable( 'CrossRedirect' );
+            if ( isset( $params['token'] ) ){
+                $path = $params['page'] . '?t=' .  $params['token'];
+            }else{
+                $path = $this->getCurrentUri()->originalURIString(true);
+            }
+            $this->redirect($path, array('host' => $params['host']) );
+        }else{
+            $checkUri = clone $this->getCurrentUri();            
+            $saIni = eZSiteAccess::getIni($this->defaultSiteAccess);
+            $args = array(
+                'host' => $saIni->variable('SiteSettings', 'SiteURL')
+            );
+            $this->redirect($this->getCurrentUri()->originalURIString(true), $args);
+        }
+        eZExecution::cleanExit();
+    }
+    
+    protected function setToken()
+    {
         if ( eZUser::isCurrentUserRegistered()
              && $this->isEnabled()
              && $this->http->hasSessionVariable('CrossRedirect')
-        ){
-            $session = session_id();
-            $token = OCToken::generateToken( eZUser::currentUserID(), $session );
+        ){            
             $params = $this->http->sessionVariable('CrossRedirect');
-            $params['page'] = $params['page'] . '?t=' . $token;
-            $this->http->setSessionVariable( 'CrossRedirect', $params );            
-            return true;
-        }else{
-        
-            $checkUri = clone $this->getCurrentUri();
-            $moduleName = $checkUri->element();
-            $module = eZModule::exists($moduleName);
-            
-            $redirectByModule = false;
-            if ($module instanceof eZModule) {
-                $redirectByModule = in_array($module->Name, $this->redirectModules);
-            }
-            return $this->isEnabled()
-                    && !$redirectByModule
-                    && $this->isLoginSiteAccess();
+            if (isset($params['need_token'])){
+                $session = session_id();
+                $token = OCToken::generateToken( eZUser::currentUserID(), $session );
+                $params['token'] = $token;
+                unset($params['need_token']);
+                $this->http->setSessionVariable( 'CrossRedirect', $params );
+                eZDebug::writeNotice('setToken',__METHOD__);
+            }            
         }
+    }
+    
+    protected function setNeedToken()
+    {
+        if ( $this->isEnabled()
+             && $this->http->hasSessionVariable('CrossRedirect')
+        ){            
+            $params = $this->http->sessionVariable('CrossRedirect');
+            if (!isset($params['need_token'])){                
+                $params['need_token'] = true;
+                $this->http->setSessionVariable( 'CrossRedirect', $params );
+                eZDebug::writeNotice('setNeedToken',__METHOD__);
+            }            
+        }
+    }
+    
+    protected function setCrossRedirect()
+    {
+        if ( $this->isEnabled() && $this->isLoginSiteAccess() && !$this->http->hasSessionVariable('CrossRedirect') ){            
+            $redirectSiteaccess = $this->http->getVariable( 'redirect', $this->defaultSiteAccess );
+            $saIni = eZSiteAccess::getIni($redirectSiteaccess);
+            $host = rtrim( $saIni->variable('SiteSettings', 'SiteURL'), '/' );
+            $defaultPage = $saIni->variable( 'SiteSettings', 'DefaultPage' );
+            $redirectPage = '/' . trim( $this->http->getVariable( 'url', $defaultPage ), '/' );            
+            $this->http->setSessionVariable( 'CrossRedirect', array( 'host' => $host, 'page' => $redirectPage ) );
+            eZDebug::writeNotice('setCrossRedirect',__METHOD__);
+        } 
+    }
+    
+    public function isLoginAccessModule()
+    {
+        $checkUri = clone $this->getCurrentUri();
+        $checkUri->toBeginning();
+        
+        $moduleName = $checkUri->element();
+        
+        $module = eZModule::exists($moduleName);
+                
+        $checkUri->increase();
+        $viewName = $checkUri->element();
+        
+        $checkUri->increase();
+        $param = $checkUri->element();
+        
+        $redirectByModule = false;
+        
+        if ($module instanceof eZModule) {
+            $redirectByModule = in_array($module->Name, $this->redirectModules);
+                
+            if ($moduleName == 'content'
+                && $viewName == 'edit'
+                && $param == eZUser::currentUserID()
+                && in_array('user', $this->redirectModules) ){               
+               $redirectByModule = true; 
+            }
+        }
+        
+        return $redirectByModule ? array('module'=> $module, 'current_view' => $viewName) : false;
+    }
+    
+    public function needRedirectionToLoginAccessByModule()
+    {                             
+        $result = $this->isLoginAccessModule();
+        if (is_array($result)) {
+            $this->setCrossRedirect();
+            
+            if ( $result['current_view'] == 'login' ){
+                $this->setNeedToken();
+                eZUser::logoutCurrent();                
+            }
+            if ( $result['current_view'] == 'logout' ){
+                eZUser::logoutCurrent();                
+            }
+        }        
+        return is_array($result);
     }
 
     public function needRedirectionToLoginAccess()
-    {
-        $checkUri = clone $this->getCurrentUri();
-        $moduleName = $checkUri->element();
-        $module = eZModule::exists($moduleName);        
-        $redirectByModule = false;
-        if ($module instanceof eZModule) {
-            $redirectByModule = in_array($module->Name, $this->redirectModules);
-            $checkUri->increase();
-            $viewName = $checkUri->element();
-            if ( $viewName == 'login' ){
-                eZUser::logoutCurrent();
-                if ( $this->isEnabled() && $this->isLoginSiteAccess() && !$this->http->hasSessionVariable('CrossRedirect') ){            
-                    $redirectSiteaccess = $this->http->getVariable( 'redirect', $this->defaultSiteAccess );
-                    $saIni = eZSiteAccess::getIni($redirectSiteaccess);
-                    $host = rtrim( $saIni->variable('SiteSettings', 'SiteURL'), '/' );
-                    $defaultPage = $saIni->variable( 'SiteSettings', 'DefaultPage' );
-                    $redirectPage = '/' . trim( $this->http->getVariable( 'url', $defaultPage ), '/' );            
-                    $this->http->setSessionVariable( 'CrossRedirect', array( 'host' => $host, 'page' => $redirectPage ) );
-                }   
-            }else{
-                $this->http->removeSessionVariable( 'CrossRedirect' );
-                return false;
-            }
-        }        
+    {        
         return $this->isEnabled()
-                && $redirectByModule
+                && $this->needRedirectionToLoginAccessByModule()
                 && !$this->isLoginSiteAccess();
+    }
+    
+    public function redirectToLoginAccess()
+    {
+        $saIni = eZSiteAccess::getIni($this->loginSiteAccess);
+        $args = array(
+            'host' => $saIni->variable('SiteSettings', 'SiteURL')
+        );
+        $params = array(
+            'redirect' => $this->currentSiteAccess,
+            'url' => $this->http->getVariable( 'url', '/' )
+        );
+        $query = http_build_query( $params );        
+        $this->redirect($this->getCurrentUri()->originalURIString(true).'?'.$query, $args);
+        eZExecution::cleanExit();
     }
 }
