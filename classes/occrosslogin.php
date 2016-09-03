@@ -155,12 +155,16 @@ EOT;
             }else{
                 $path = $this->getCurrentUri()->originalURIString(true);
             }
-            $this->redirect($path, array('host' => $params['host']) );
+            $this->redirect($path, array(
+                'host' => $params['host'],
+                'protocol' => $this->ini->variable('CrossLogin', 'SSLDefault') == 'enabled' ? 'https' : 'http'
+            ));
         }else{
             $checkUri = clone $this->getCurrentUri();            
             $saIni = eZSiteAccess::getIni($this->defaultSiteAccess);
             $args = array(
-                'host' => $saIni->variable('SiteSettings', 'SiteURL')
+                'host' => $saIni->variable('SiteSettings', 'SiteURL'),
+                'protocol' => $this->ini->variable('CrossLogin', 'SSLDefault') == 'enabled' ? 'https' : 'http'
             );
             $this->redirect($this->getCurrentUri()->originalURIString(true), $args);
         }
@@ -271,7 +275,8 @@ EOT;
     {
         $saIni = eZSiteAccess::getIni($this->loginSiteAccess);
         $args = array(
-            'host' => $saIni->variable('SiteSettings', 'SiteURL')
+            'host' => $saIni->variable('SiteSettings', 'SiteURL'),
+            'protocol' => $this->ini->variable('CrossLogin', 'SSLLogin') == 'enabled' ? 'https' : 'http'
         );
         $params = array(
             'redirect' => $this->currentSiteAccess,
