@@ -44,6 +44,7 @@ class OcCrossLogin
             $this->currentSiteAccess = $siteaccess['name'];
         }
         $this->http = eZHTTPTool::instance();
+        $this->ignoreRequestList = (array)$this->ini->variable('CrossLogin', 'IgnoreRequestList');
     }
     
     public function setCurrentUri( eZURI $uri ){
@@ -69,15 +70,21 @@ class OcCrossLogin
     {        
         $helper = self::instance();
         $helper->setCurrentUri( $uri );
-        if ($helper->needRedirectionToLoginAccess()) {
-            eZDebug::writeNotice('needRedirectionToLoginAccess',__METHOD__);
-            $helper->redirectToLoginAccess();
+        
+        if ($helper->isCrossLoginRequest()) {
+            if ($helper->needRedirectionToLoginAccess()) {
+                $helper->redirectToLoginAccess();
+            }
+    
+            if ($helper->needRedirectionToNotLoginAccess()) {
+                $helper->redirectToNotLoginAccess();
+            }
         }
-
-        if ($helper->needRedirectionToNotLoginAccess()) {
-            eZDebug::writeNotice('needRedirectionToNotLoginAccess',__METHOD__);
-            $helper->redirectToNotLoginAccess();
-        }        
+    }
+    
+    public function isCrossLoginRequest()
+    {
+        return $this->isEnabled() && !in_array($this->currentUri->URI, $this->ignoreRequestList);
     }
 
     protected function redirect( $path, $parameters = array(), $status = false, $encodeURL = true, $returnRedirectObject = false )
