@@ -95,7 +95,7 @@ function AdminSiteaccessCheckbox( val )
 {else}
 
 <div class="buttonblock login-input-wrapper" style="margin-top: 70px;">
-<a class="defaultbutton" href="/user/login?url={$User:redirect_uri|wash}" id="loginbutton" style="padding: 5px; text-decoration: none;font-size: 1.5em;">Vai alla pagina di login</a>
+<a class="defaultbutton" href="{concat('/user/login?url=',$User:redirect_uri)|ezurl(no)}" id="loginbutton" style="padding: 5px; text-decoration: none;font-size: 1.5em;">Vai alla pagina di login</a>
 </div>
 
 {/if}
