@@ -19,7 +19,7 @@ class eZComuneDiTrentoLDAPUser extends eZUser
     /*!
      Constructor
     */
-    function eZComuneDiTrentoLDAPUser()
+    function __construct()
     {
     }
 

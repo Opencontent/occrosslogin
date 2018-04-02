@@ -2,7 +2,7 @@
 
 class eZCrossloginSSOHandler
 {
-    function eZCrossloginSSOHandler()
+    function __construct()
     {
     }
 
