@@ -13,6 +13,9 @@ class eZCrossloginSSOHandler
     function handleSSOLogin()
     {
         $helper = OcCrossLogin::instance();
+        if (!$helper->isEnabled()){
+            return false;
+        }
         $http = eZHTTPTool::instance();
         $token = false;
         
