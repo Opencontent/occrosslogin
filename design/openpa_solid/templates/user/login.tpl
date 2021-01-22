@@ -7,7 +7,7 @@
     
     {def $redirect = $User:redirect_uri|wash}
       {if ezhttp( 'url', 'get' )}
-          {set $redirect = ezhttp( 'url', 'get' )}
+          {set $redirect = ezhttp( 'url', 'get' )|wash()}
       {/if} 
       <div class='row'>
         <div class='col-sm-4 col-sm-offset-4'>
